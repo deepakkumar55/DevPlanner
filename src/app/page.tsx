@@ -5,15 +5,24 @@ import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, Environment, Float, MeshDistortMaterial, OrbitControls } from "@react-three/drei";
 
+// Define types for structured data
+interface FeatureType {
+  title: string;
+  icon: string;
+  description: string;
+}
+
 // Component for 3D logo
-function DevPlannerLogo(props) {
+function DevPlannerLogo(props: JSX.IntrinsicElements['mesh']) {
   const { viewport } = useThree();
-  const mesh = useRef();
+  const mesh = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    mesh.current.rotation.x = Math.sin(t / 4) / 4;
-    mesh.current.rotation.y = Math.sin(t / 2) / 2;
+    if (mesh.current) {
+      mesh.current.rotation.x = Math.sin(t / 4) / 4;
+      mesh.current.rotation.y = Math.sin(t / 2) / 2;
+    }
   });
 
   return (
@@ -34,8 +43,8 @@ function DevPlannerLogo(props) {
 }
 
 // Terminal component with enhanced animations
-function Terminal({ text }) {
-  const terminalRef = useRef();
+function Terminal({ text }: { text: string }) {
+  const terminalRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (terminalRef.current) {
@@ -64,7 +73,15 @@ function Terminal({ text }) {
 }
 
 // Feature display with animations
-function FeatureCard({ feature, isActive, onClick }) {
+function FeatureCard({ 
+  feature, 
+  isActive, 
+  onClick 
+}: { 
+  feature: FeatureType; 
+  isActive: boolean; 
+  onClick: () => void 
+}) {
   return (
     <button
       onClick={onClick}
@@ -114,11 +131,11 @@ function FeatureCard({ feature, isActive, onClick }) {
 }
 
 export default function Home() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [scrollY, setScrollY] = useState(0);
-  const [terminalText, setTerminalText] = useState("");
-  const [activeFeature, setActiveFeature] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [scrollY, setScrollY] = useState<number>(0);
+  const [terminalText, setTerminalText] = useState<string>("");
+  const [activeFeature, setActiveFeature] = useState<number>(0);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
   
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -193,7 +210,7 @@ export default function Home() {
   
 
   // Features data with enhanced descriptions
-  const features = [
+  const features: FeatureType[] = [
     {
       title: "Job Tracker",
       icon: "📋",
