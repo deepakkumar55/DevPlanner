@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, ThreeElements } from "@react-three/fiber";
 import { useGLTF, Environment, Float, MeshDistortMaterial, OrbitControls } from "@react-three/drei";
 
 // Define types for structured data
@@ -13,7 +13,7 @@ interface FeatureType {
 }
 
 // Component for 3D logo
-function DevPlannerLogo(props: JSX.IntrinsicElements['mesh']) {
+function DevPlannerLogo(props: ThreeElements['mesh']) {
   const { viewport } = useThree();
   const mesh = useRef<THREE.Mesh>(null);
   
