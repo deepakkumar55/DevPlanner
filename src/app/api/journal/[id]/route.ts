@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Task from "@/lib/Model/Task.Model";
+import Journal from "@/lib/Model/Journal.Model";
 import { getAuthenticatedUser } from "@/middleware/auth";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -11,13 +11,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     await connectDB();
-    const task = await Task.findOne({ _id: params.id, userId: user.id });
+    const journal = await Journal.findOne({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!journal) {
+      return NextResponse.json({ error: "Journal entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ journal }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -33,20 +33,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json();
     await connectDB();
 
-    const task = await Task.findOneAndUpdate(
+    const journal = await Journal.findOneAndUpdate(
       { _id: params.id, userId: user.id },
-      { 
-        ...body,
-        completedAt: body.completed ? new Date() : null
-      },
+      body,
       { new: true }
     );
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!journal) {
+      return NextResponse.json({ error: "Journal entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ journal }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -60,13 +57,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await connectDB();
-    const task = await Task.findOneAndDelete({ _id: params.id, userId: user.id });
+    const journal = await Journal.findOneAndDelete({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!journal) {
+      return NextResponse.json({ error: "Journal entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Task deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Journal entry deleted successfully" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

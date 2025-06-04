@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Task from "@/lib/Model/Task.Model";
+import Progress from "@/lib/Model/Progress.Model";
 import { getAuthenticatedUser } from "@/middleware/auth";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -11,13 +11,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     await connectDB();
-    const task = await Task.findOne({ _id: params.id, userId: user.id });
+    const progress = await Progress.findOne({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!progress) {
+      return NextResponse.json({ error: "Progress entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ progress }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -33,20 +33,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json();
     await connectDB();
 
-    const task = await Task.findOneAndUpdate(
+    const progress = await Progress.findOneAndUpdate(
       { _id: params.id, userId: user.id },
-      { 
-        ...body,
-        completedAt: body.completed ? new Date() : null
-      },
+      body,
       { new: true }
     );
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!progress) {
+      return NextResponse.json({ error: "Progress entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ progress }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -60,13 +57,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await connectDB();
-    const task = await Task.findOneAndDelete({ _id: params.id, userId: user.id });
+    const progress = await Progress.findOneAndDelete({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!progress) {
+      return NextResponse.json({ error: "Progress entry not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Task deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Progress entry deleted successfully" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

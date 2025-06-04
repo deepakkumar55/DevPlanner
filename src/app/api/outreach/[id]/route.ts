@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Task from "@/lib/Model/Task.Model";
+import Outreach from "@/lib/Model/Outreach.Model";
 import { getAuthenticatedUser } from "@/middleware/auth";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -11,13 +11,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     await connectDB();
-    const task = await Task.findOne({ _id: params.id, userId: user.id });
+    const outreach = await Outreach.findOne({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!outreach) {
+      return NextResponse.json({ error: "Outreach not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ outreach }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -33,20 +33,26 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json();
     await connectDB();
 
-    const task = await Task.findOneAndUpdate(
+    // Handle status updates with timestamps
+    const updateData = { ...body };
+    if (body.status === 'opened' && !body.openedAt) {
+      updateData.openedAt = new Date();
+    }
+    if (body.status === 'replied' && !body.repliedAt) {
+      updateData.repliedAt = new Date();
+    }
+
+    const outreach = await Outreach.findOneAndUpdate(
       { _id: params.id, userId: user.id },
-      { 
-        ...body,
-        completedAt: body.completed ? new Date() : null
-      },
+      updateData,
       { new: true }
     );
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!outreach) {
+      return NextResponse.json({ error: "Outreach not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task }, { status: 200 });
+    return NextResponse.json({ outreach }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -60,13 +66,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await connectDB();
-    const task = await Task.findOneAndDelete({ _id: params.id, userId: user.id });
+    const outreach = await Outreach.findOneAndDelete({ _id: params.id, userId: user.id });
 
-    if (!task) {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (!outreach) {
+      return NextResponse.json({ error: "Outreach not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Task deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Outreach deleted successfully" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

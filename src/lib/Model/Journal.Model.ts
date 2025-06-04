@@ -2,29 +2,21 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IJournal extends Document {
   _id: string;
-  userId: mongoose.Types.ObjectId;
+  userId: string;
   date: Date;
   title?: string;
   content: string;
-  mood: 'excellent' | 'good' | 'okay' | 'bad' | 'terrible';
-  moodEmoji: string;
+  mood: string;
+  energyLevel: number; // 1-10
   keyLearnings: string[];
   challenges: string[];
-  achievements: string[];
+  wins: string[];
+  goals: string[];
   gratitude: string[];
-  tomorrowGoals: string[];
-  energyLevel: 1 | 2 | 3 | 4 | 5;
-  productivityLevel: 1 | 2 | 3 | 4 | 5;
-  stressLevel: 1 | 2 | 3 | 4 | 5;
-  sleepHours?: number;
-  exerciseMinutes?: number;
-  studyHours?: number;
-  workHours?: number;
-  socialTime?: number;
+  tomorrowFocus: string[];
+  isPublic: boolean;
   tags: string[];
-  isPrivate: boolean;
-  weather?: string;
-  location?: string;
+  wordCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,9 +24,9 @@ export interface IJournal extends Document {
 const JournalSchema = new Schema<IJournal>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      type: String,
+      required: true,
+      ref: 'User'
     },
     date: {
       type: Date,
@@ -43,103 +35,65 @@ const JournalSchema = new Schema<IJournal>(
     title: {
       type: String,
       trim: true,
-      maxlength: 100
+      maxlength: 200
     },
     content: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 5000
+      maxlength: 10000
     },
     mood: {
       type: String,
-      enum: ['excellent', 'good', 'okay', 'bad', 'terrible'],
-      required: true
-    },
-    moodEmoji: {
-      type: String,
-      required: true,
       default: '😐'
+    },
+    energyLevel: {
+      type: Number,
+      default: 5,
+      min: 1,
+      max: 10
     },
     keyLearnings: [{
       type: String,
       trim: true,
-      maxlength: 200
+      maxlength: 500
     }],
     challenges: [{
       type: String,
       trim: true,
-      maxlength: 200
+      maxlength: 500
     }],
-    achievements: [{
+    wins: [{
       type: String,
       trim: true,
-      maxlength: 200
+      maxlength: 500
+    }],
+    goals: [{
+      type: String,
+      trim: true,
+      maxlength: 500
     }],
     gratitude: [{
       type: String,
       trim: true,
-      maxlength: 200
+      maxlength: 500
     }],
-    tomorrowGoals: [{
+    tomorrowFocus: [{
       type: String,
       trim: true,
-      maxlength: 200
+      maxlength: 500
     }],
-    energyLevel: {
-      type: Number,
-      enum: [1, 2, 3, 4, 5],
-      default: 3
-    },
-    productivityLevel: {
-      type: Number,
-      enum: [1, 2, 3, 4, 5],
-      default: 3
-    },
-    stressLevel: {
-      type: Number,
-      enum: [1, 2, 3, 4, 5],
-      default: 3
-    },
-    sleepHours: {
-      type: Number,
-      min: 0,
-      max: 24
-    },
-    exerciseMinutes: {
-      type: Number,
-      min: 0
-    },
-    studyHours: {
-      type: Number,
-      min: 0,
-      max: 24
-    },
-    workHours: {
-      type: Number,
-      min: 0,
-      max: 24
-    },
-    socialTime: {
-      type: Number,
-      min: 0
+    isPublic: {
+      type: Boolean,
+      default: false
     },
     tags: [{
       type: String,
-      trim: true,
-      lowercase: true
+      trim: true
     }],
-    isPrivate: {
-      type: Boolean,
-      default: true
-    },
-    weather: {
-      type: String,
-      trim: true
-    },
-    location: {
-      type: String,
-      trim: true
+    wordCount: {
+      type: Number,
+      default: 0
     }
   },
   {
@@ -148,18 +102,13 @@ const JournalSchema = new Schema<IJournal>(
   }
 );
 
-// Indexes
 JournalSchema.index({ userId: 1, date: -1 });
-JournalSchema.index({ userId: 1, mood: 1 });
-JournalSchema.index({ userId: 1, isPrivate: 1 });
-JournalSchema.index({ tags: 1 });
-
-// Compound unique index to prevent duplicate entries per user per day
 JournalSchema.index({ userId: 1, date: 1 }, { unique: true });
 
-// Virtual for word count
-JournalSchema.virtual('wordCount').get(function() {
-  return this.content.split(/\s+/).filter(word => word.length > 0).length;
+// Pre-save middleware to calculate word count
+JournalSchema.pre('save', function(next) {
+  this.wordCount = this.content.split(/\s+/).filter(word => word.length > 0).length;
+  next();
 });
 
 export default mongoose.models.Journal || mongoose.model<IJournal>('Journal', JournalSchema);

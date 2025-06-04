@@ -2,25 +2,24 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOutreach extends Document {
   _id: string;
-  userId: mongoose.Types.ObjectId;
-  type: 'email' | 'dm' | 'linkedin' | 'twitter' | 'phone' | 'meeting';
-  target: string; // Company/Person name
-  contactPerson?: string;
-  contactEmail?: string;
-  contactPhone?: string;
+  userId: string;
+  type: 'email' | 'dm' | 'call' | 'meeting';
   platform?: string;
+  targetName: string;
+  targetEmail?: string;
+  targetCompany?: string;
   subject: string;
   message?: string;
-  status: 'sent' | 'opened' | 'replied' | 'interested' | 'rejected' | 'no-response';
-  responseMessage?: string;
-  responseDate?: Date;
+  status: 'sent' | 'delivered' | 'opened' | 'replied' | 'bounced' | 'no-response';
+  sentAt: Date;
+  openedAt?: Date;
+  repliedAt?: Date;
+  response?: string;
   followUpDate?: Date;
-  followUpCount: number;
-  leadQuality: 'hot' | 'warm' | 'cold';
-  estimatedValue?: number;
-  actualValue?: number;
-  tags: string[];
   notes?: string;
+  tags: string[];
+  leadSource?: string;
+  conversionValue?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,38 +27,34 @@ export interface IOutreach extends Document {
 const OutreachSchema = new Schema<IOutreach>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      type: String,
+      required: true,
+      ref: 'User'
     },
     type: {
       type: String,
-      enum: ['email', 'dm', 'linkedin', 'twitter', 'phone', 'meeting'],
+      enum: ['email', 'dm', 'call', 'meeting'],
       required: true
     },
-    target: {
+    platform: {
+      type: String,
+      trim: true
+    },
+    targetName: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100
     },
-    contactPerson: {
-      type: String,
-      trim: true,
-      maxlength: 100
-    },
-    contactEmail: {
+    targetEmail: {
       type: String,
       trim: true,
       lowercase: true
     },
-    contactPhone: {
+    targetCompany: {
       type: String,
-      trim: true
-    },
-    platform: {
-      type: String,
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     subject: {
       type: String,
@@ -70,53 +65,51 @@ const OutreachSchema = new Schema<IOutreach>(
     message: {
       type: String,
       trim: true,
-      maxlength: 2000
+      maxlength: 5000
     },
     status: {
       type: String,
-      enum: ['sent', 'opened', 'replied', 'interested', 'rejected', 'no-response'],
+      enum: ['sent', 'delivered', 'opened', 'replied', 'bounced', 'no-response'],
       default: 'sent'
     },
-    responseMessage: {
-      type: String,
-      trim: true,
-      maxlength: 2000
+    sentAt: {
+      type: Date,
+      default: Date.now
     },
-    responseDate: {
+    openedAt: {
       type: Date,
       default: null
+    },
+    repliedAt: {
+      type: Date,
+      default: null
+    },
+    response: {
+      type: String,
+      trim: true,
+      maxlength: 5000
     },
     followUpDate: {
       type: Date,
       default: null
     },
-    followUpCount: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    leadQuality: {
-      type: String,
-      enum: ['hot', 'warm', 'cold'],
-      default: 'cold'
-    },
-    estimatedValue: {
-      type: Number,
-      min: 0
-    },
-    actualValue: {
-      type: Number,
-      min: 0
-    },
-    tags: [{
-      type: String,
-      trim: true,
-      lowercase: true
-    }],
     notes: {
       type: String,
       trim: true,
       maxlength: 1000
+    },
+    tags: [{
+      type: String,
+      trim: true
+    }],
+    leadSource: {
+      type: String,
+      trim: true
+    },
+    conversionValue: {
+      type: Number,
+      default: 0,
+      min: 0
     }
   },
   {
@@ -125,12 +118,8 @@ const OutreachSchema = new Schema<IOutreach>(
   }
 );
 
-// Indexes
-OutreachSchema.index({ userId: 1, createdAt: -1 });
-OutreachSchema.index({ userId: 1, type: 1 });
+OutreachSchema.index({ userId: 1, sentAt: -1 });
 OutreachSchema.index({ userId: 1, status: 1 });
-OutreachSchema.index({ userId: 1, leadQuality: 1 });
-OutreachSchema.index({ followUpDate: 1 });
-OutreachSchema.index({ responseDate: -1 });
+OutreachSchema.index({ userId: 1, type: 1 });
 
 export default mongoose.models.Outreach || mongoose.model<IOutreach>('Outreach', OutreachSchema);

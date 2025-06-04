@@ -2,10 +2,10 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITask extends Document {
   _id: string;
-  userId: mongoose.Types.ObjectId;
+  userId: string;
   title: string;
   description?: string;
-  category: 'Learning' | 'Health' | 'Content' | 'Outreach' | 'Personal' | 'Work';
+  category: 'Learning' | 'Health' | 'Content' | 'Outreach' | 'Personal';
   priority: 'high' | 'medium' | 'low';
   completed: boolean;
   completedAt?: Date;
@@ -20,9 +20,9 @@ export interface ITask extends Document {
 const TaskSchema = new Schema<ITask>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      type: String,
+      required: true,
+      ref: 'User'
     },
     title: {
       type: String,
@@ -37,8 +37,8 @@ const TaskSchema = new Schema<ITask>(
     },
     category: {
       type: String,
-      enum: ['Learning', 'Health', 'Content', 'Outreach', 'Personal', 'Work'],
-      required: true
+      enum: ['Learning', 'Health', 'Content', 'Outreach', 'Personal'],
+      default: 'Learning'
     },
     priority: {
       type: String,
@@ -67,8 +67,7 @@ const TaskSchema = new Schema<ITask>(
     },
     tags: [{
       type: String,
-      trim: true,
-      lowercase: true
+      trim: true
     }]
   },
   {
@@ -77,23 +76,7 @@ const TaskSchema = new Schema<ITask>(
   }
 );
 
-// Indexes
 TaskSchema.index({ userId: 1, createdAt: -1 });
 TaskSchema.index({ userId: 1, completed: 1 });
-TaskSchema.index({ userId: 1, category: 1 });
-TaskSchema.index({ userId: 1, priority: 1 });
-TaskSchema.index({ dueDate: 1 });
-
-// Pre-save middleware to set completedAt
-TaskSchema.pre('save', function(next) {
-  if (this.isModified('completed')) {
-    if (this.completed && !this.completedAt) {
-      this.completedAt = new Date();
-    } else if (!this.completed) {
-      this.completedAt = null;
-    }
-  }
-  next();
-});
 
 export default mongoose.models.Task || mongoose.model<ITask>('Task', TaskSchema);

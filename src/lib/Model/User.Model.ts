@@ -4,6 +4,7 @@ export interface IUser extends Document {
   _id: string;
   name: string;
   email: string;
+  password: string;
   avatar?: string;
   profileImage?: string;
   joinDate: Date;
@@ -46,10 +47,16 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       trim: true
     },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6
+    },
     avatar: {
       type: String,
-      default: function() {
-        return this.name ? this.name.charAt(0).toUpperCase() : 'U';
+      default: function(this: any) {
+        const name = (this as IUser).name;
+        return name ? name.charAt(0).toUpperCase() : 'U';
       }
     },
     profileImage: {
@@ -76,8 +83,6 @@ const UserSchema = new Schema<IUser>(
     },
     publicSlug: {
       type: String,
-      unique: true,
-      sparse: true,
       lowercase: true,
       trim: true
     },
@@ -125,11 +130,8 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Indexes
-UserSchema.index({ email: 1 });
-UserSchema.index({ publicSlug: 1 });
-UserSchema.index({ currentDay: 1 });
-UserSchema.index({ createdAt: -1 });
+// Only use schema.index() for the publicSlug index
+UserSchema.index({ publicSlug: 1 }, { unique: true, sparse: true });
 
 // Pre-save middleware to generate public slug
 UserSchema.pre('save', function(next) {
